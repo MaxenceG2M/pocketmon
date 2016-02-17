@@ -93,6 +93,8 @@ if __name__ == '__main__':
 
         wc = int(v.get('word_count','0'))
 
-        logger.debug('Article %s -- %s have %s word count' % (item_id, given_title, wc))
+        #logger.debug('Article %s -- %s have %s word count' % (item_id, given_title, wc))
         if wc:
             add_tag(item_id, given_title, reading_time(wc / words_per_minute))
+        else:
+            logger.debug('Article %s -- %s (%s) -- No Word Count' % (item_id, given_title, v.get('resolved_title', 'no resolved title')))
