@@ -19,10 +19,10 @@ logger.setLevel(logging_level)
 logger.addHandler(logging_handler)
 
 
-def add_tag(item, tag):
+def add_tag(id, title, tag):
     """ Add a tag on an article. """
 
-    logger.debug('Tag "%s" on %s -- %s' % (tag, item.id, item.title))
+    logger.debug('Tag "%s" on %s -- %s' % (tag, id, title))
 
     api.send("""
     [
@@ -32,14 +32,29 @@ def add_tag(item, tag):
             "tags"    : "%s"
         }
     ]
-    """ % (item.id, tag))
+    """ % (id, tag))
+
+def remove_tag(id, title, tag):
+    """ Add a tag on an article. """
+
+    logger.debug('Remove tag "%s" on %s -- %s' % (tag, id, title))
+
+    api.send("""
+    [
+        {
+            "action"  : "tags_remove",
+            "item_id" : "%s",
+            "tags"    : "%s"
+        }
+    ]
+    """ % (id, tag))
 
 
 def reading_time(minutes):
     """ Convert minutes to a nice string representing the time. """
     rounded = int(5 * round(float(minutes)/5)) or 2
 
-    if 2 < rounded < 50:
+    if 0 < rounded < 50:
         return '%d minutes' % rounded
     elif 50 <= rounded < 75:
         return '1 hour'
@@ -53,30 +68,25 @@ if __name__ == '__main__':
     api = pocket.Pocket(consumer_key=consumer_key, access_token=access_token)
 
     try:
-        items = api.get(sort='newest', state='unread', tag='_untagged_',
+        datas,_ = api.get(sort='newest', state='unread',
                         detailType='complete')
     except AttributeError:
-        items = []
+        datas = {}
 
-    for item in items[0]['list'].items():
-        i = item[1]
+    for _,v in datas.get('list',{}).items():
+        given_title = v.get('given_title', 'no_title')
+        item_id = v.get('item_id', 'no_id')
+        is_article = int(v.get('is_article', '0'))
 
-        if 'word_count' in i:
-            print(i['word_count'])
-        else:
-            print('No word count')
+        f = list(filter(lambda t: 'minute' in t or 'hour' in t, v.get('tags',[])))
 
-        print(i['given_title'])
-        if 'resolved_title' in i:
-            print(i['resolved_title'])
+        if len(f) > 1:
+            remove_tag(item_id, given_title, ",".join(f))
+        elif f:
+            continue
 
-        #print(i['word_count'])
+        wc = int(v.get('word_count','0'))
 
-        # item.word_count = int(item.word_count)
-        # item.is_article = int(item.is_article)
-        #
-        # if item.word_count:
-        #     add_tag(item, reading_time(item.word_count // words_per_minute))
-        #
-        # elif not item.is_article:
-        #     add_tag(item, 'not an article')
+        logger.debug('Article %s -- %s have %s word count' % (item_id, given_title, wc))
+        if wc:
+            add_tag(item_id, given_title, reading_time(wc / words_per_minute))
