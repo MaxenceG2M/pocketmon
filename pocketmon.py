@@ -21,38 +21,45 @@ logger.addHandler(logging_handler)
 
 def add_tag(id, title, tag):
     """ Add a tag on an article. """
+    action_tag(id, title, tag, "tags_add")
 
-    logger.debug('Tag "%s" on %s -- %s' % (tag, id, title))
-
-    api.send("""
-    [
-        {
-            "action"  : "tags_add",
-            "item_id" : "%s",
-            "tags"    : "%s"
-        }
-    ]
-    """ % (id, tag))
 
 def remove_tag(id, title, tag):
-    """ Add a tag on an article. """
+    """ Remove a tag on an article. """
+    action_tag(id, title, tag, "tags_remove")
 
-    logger.debug('Remove tag "%s" on %s -- %s' % (tag, id, title))
+
+def action_tag(id, title, tag, action):
+    """ Do an action on tags on an article. """
+
+    logger.debug('Do "%s" for tag "%s" on %s -- %s' % (action, tag, id, title))
 
     api.send("""
     [
         {
-            "action"  : "tags_remove",
+            "action"  : "%s",
             "item_id" : "%s",
             "tags"    : "%s"
         }
     ]
-    """ % (id, tag))
+    """ % (action, id, tag))
 
 
 def reading_time(minutes):
-    """ Convert minutes to a nice string representing the time. """
-    rounded = int(5 * round(float(minutes)/5)) or 2
+    """ Convert minutes to a nice string representing the time.
+    :param minutes: number of minutes (float)
+    :return: a nice string for 1, 2 then by interval of 5 minutes then by 1, 1.5 or +2 hours
+    """
+
+    # First, for 1 and 2 minutes range
+    rounded = round(minutes)
+    if rounded <= 1:
+        return '1 minute'
+    elif rounded <= 2:
+        return '2 minutes'
+
+    # Second, by interval of 5 minutes
+    rounded = int(5 * round(float(minutes)/5)) or 1
 
     if 0 < rounded < 50:
         return '%d minutes' % rounded
@@ -76,7 +83,6 @@ if __name__ == '__main__':
     for _,v in datas.get('list',{}).items():
         given_title = v.get('given_title', 'no_title')
         item_id = v.get('item_id', 'no_id')
-        is_article = int(v.get('is_article', '0'))
 
         f = list(filter(lambda t: 'minute' in t or 'hour' in t, v.get('tags',[])))
 
