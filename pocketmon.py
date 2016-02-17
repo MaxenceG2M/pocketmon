@@ -50,8 +50,7 @@ def reading_time(minutes):
 
 
 if __name__ == '__main__':
-    api = pocket.Api(consumer_key=consumer_key,
-                     access_token=access_token)
+    api = pocket.Pocket(consumer_key=consumer_key, access_token=access_token)
 
     try:
         items = api.get(sort='newest', state='unread', tag='_untagged_',
@@ -59,13 +58,25 @@ if __name__ == '__main__':
     except AttributeError:
         items = []
 
-    for item in items:
+    for item in items[0]['list'].items():
+        i = item[1]
 
-        item.word_count = int(item.word_count)
-        item.is_article = int(item.is_article)
+        if 'word_count' in i:
+            print(i['word_count'])
+        else:
+            print('No word count')
 
-        if item.word_count:
-            add_tag(item, reading_time(item.word_count // words_per_minute))
+        print(i['given_title'])
+        if 'resolved_title' in i:
+            print(i['resolved_title'])
 
-        elif not item.is_article:
-            add_tag(item, 'not an article')
+        #print(i['word_count'])
+
+        # item.word_count = int(item.word_count)
+        # item.is_article = int(item.is_article)
+        #
+        # if item.word_count:
+        #     add_tag(item, reading_time(item.word_count // words_per_minute))
+        #
+        # elif not item.is_article:
+        #     add_tag(item, 'not an article')

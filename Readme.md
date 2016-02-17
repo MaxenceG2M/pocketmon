@@ -1,3 +1,12 @@
+# [WIP] 
+`pip install git+https://github.com/felipecorrea/python-pocket` doesn't run ==> `pip install pocket` ([see project](https://github.com/tapanpandita/pocket)).
+
+Need to adapt `get_access_token.py` for python 3 to get an access token (added in project). 
+
+This change API and current project doesn't still run. Need some adaptation.
+
+All with python 3.4.2
+
 
 # Pocketmon
 
